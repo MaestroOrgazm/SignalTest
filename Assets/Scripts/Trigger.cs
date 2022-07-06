@@ -5,14 +5,14 @@ using UnityEngine.Events;
 
 public class Trigger : MonoBehaviour
 {
-    public event UnityAction<bool> OnHouseEntrance;
+    public event UnityAction<bool> EntryHouse;
     private bool _isEntrance = true;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<Walk>(out Walk walk))
+        if (other.TryGetComponent<Way>(out Way Way))
         {
-            OnHouseEntrance.Invoke(_isEntrance);
+            EntryHouse.Invoke(_isEntrance);
             _isEntrance = !_isEntrance;
         }
     }

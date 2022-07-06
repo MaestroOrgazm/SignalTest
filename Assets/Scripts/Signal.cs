@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(Trigger))]
 
@@ -14,29 +15,27 @@ public class Signal : MonoBehaviour
     private float _maxVolume = 1f;
     private WaitForSeconds _waitForSeconds = new WaitForSeconds(1f);
 
-    private void Start()
+    private void OnEnable()
     {
         _audioSource = GetComponent<AudioSource>();
         _trigger = GetComponent<Trigger>();
-        AddListener();
+        _trigger.EntryHouse += ChoiceVolume;
     }
 
-    private void AddListener()
+    private void OnDisable()
     {
-        _trigger.OnHouseEntrance += ControlCoroutine;
+        _trigger.EntryHouse -= ChoiceVolume;
     }
 
-    private void ControlCoroutine(bool isEntrance)
+    private void ChoiceVolume(bool isEntrance)
     {
-        if (isEntrance == true)
+        if (isEntrance)
         {
             _audioSource.Play();
             PlayAudio(_maxVolume);
+            return;
         }
-        else
-        {
-            PlayAudio(_minVolume);
-        }
+        PlayAudio(_minVolume);
     }
 
     private void PlayAudio(float volume)
