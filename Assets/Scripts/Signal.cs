@@ -1,69 +1,67 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(Trigger))]
 
 public class Signal : MonoBehaviour
 {
-    private float _entranceCount = 0f;
-    private float _deltaVolume = 0.003f;
+    private float _deltaVolume = 0.25f;
     private AudioSource _audioSource;
-    private bool _isPlay = false;
+    private Trigger _trigger;
 
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
+        _trigger = GetComponent<Trigger>();
+        AddListener();
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void AddListener()
     {
-        if (other.TryGetComponent<Walk>(out Walk walk))
+        _trigger.OnHouseEntrance += ControlCoroutine;
+    }
+
+    private void ControlCoroutine(bool isEntrance)
+    {
+        if (isEntrance == true)
         {
-            _entranceCount++;
+            StopAllCoroutines();
+            StartCoroutine(PlayAudio());
+        }
+        else
+        {
+            StopAllCoroutines();
+            StartCoroutine(StopAudio());
         }
     }
 
-    private void Update()
+    private IEnumerator PlayAudio()
     {
-        if (_entranceCount > 0)
+        var _whiteSecond = new WaitForSeconds(1f);
+
+        _audioSource.Play();
+
+        while (_audioSource.volume < 1)
         {
-            if (_entranceCount % 2 > 0)
+            _audioSource.volume += _deltaVolume;
+            yield return _whiteSecond;
+        }
+    }
+
+    private IEnumerator StopAudio()
+    {
+        var _whiteSecond = new WaitForSeconds(1f);
+
+        while (_audioSource.volume > 0)
+        {
+            _audioSource.volume -= _deltaVolume;
+
+            if (_audioSource.volume <= 0)
             {
-                PlayAudio();
-                _audioSource.volume += _deltaVolume;
-
-                if (_audioSource.volume == 1)
-                {
-                    _audioSource.volume = 1;
-                }
+                _audioSource.Stop();
             }
-            else
-            {
-                _audioSource.volume -= _deltaVolume;
-
-                if (_audioSource.volume == 0)
-                {
-                    _audioSource.volume = 0;
-                    StopAudio();
-                }
-            }
-        }
-    }
-
-    private void PlayAudio()
-    {
-        if (_isPlay == false)
-        {
-            _audioSource.Play();
-            _isPlay = true;
-        }
-    }
-
-    private void StopAudio()
-    {
-        if (_isPlay == true)
-        {
-            _audioSource.Stop();
-            _isPlay= false;
+            yield return _whiteSecond;
         }
     }
 }
