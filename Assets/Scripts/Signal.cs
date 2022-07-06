@@ -9,8 +9,7 @@ public class Signal : MonoBehaviour
     private float _deltaVolume = 15f;
     private AudioSource _audioSource;
     private Trigger _trigger;
-    private Coroutine _playAudio;
-    private Coroutine _stopAudio;
+    private Coroutine _changeAudio;
     private float _minVolume = 0f;
     private float _maxVolume = 1f;
     private WaitForSeconds _waitForSeconds = new WaitForSeconds(1f);
@@ -31,43 +30,31 @@ public class Signal : MonoBehaviour
     {
         if (isEntrance == true)
         {
-            if (_stopAudio != null)
-            {
-                StopCoroutine(_stopAudio);
-            }
-
             _audioSource.Play();
-            _playAudio = StartCoroutine(PlayAudio());
+            PlayAudio(_maxVolume);
         }
         else
         {
-            if (_playAudio != null)
-            {
-                StopCoroutine(_playAudio);
-            }
-
-            _stopAudio = StartCoroutine(StopAudio());
+            PlayAudio(_minVolume);
         }
     }
 
-    private IEnumerator PlayAudio()
+    private void PlayAudio(float volume)
     {
-
-        while (_audioSource.volume != _maxVolume)
+        if (_changeAudio != null)
         {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume,_maxVolume, _deltaVolume * Time.deltaTime );
-            yield return _waitForSeconds;
+            StopCoroutine(_changeAudio);
         }
+
+        _changeAudio = StartCoroutine(ChangeVolume(volume));
     }
 
-    private IEnumerator StopAudio()
+    private IEnumerator ChangeVolume(float targetVolume)
     {
-        while (_audioSource.volume != _minVolume)
+        while (_audioSource.volume != targetVolume)
         {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _minVolume, _deltaVolume * Time.deltaTime);
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetVolume, _deltaVolume * Time.deltaTime);
             yield return _waitForSeconds;
         }
-
-        _audioSource.Stop();
     }
 }
