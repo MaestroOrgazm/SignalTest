@@ -6,9 +6,14 @@ using UnityEngine;
 
 public class Signal : MonoBehaviour
 {
-    private float _deltaVolume = 0.25f;
+    private float _deltaVolume = 15f;
     private AudioSource _audioSource;
     private Trigger _trigger;
+    private Coroutine _playAudio;
+    private Coroutine _stopAudio;
+    private float _minVolume = 0f;
+    private float _maxVolume = 1f;
+    private WaitForSeconds _waitForSeconds = new WaitForSeconds(1f);
 
     private void Start()
     {
@@ -26,42 +31,43 @@ public class Signal : MonoBehaviour
     {
         if (isEntrance == true)
         {
-            StopAllCoroutines();
-            StartCoroutine(PlayAudio());
+            if (_stopAudio != null)
+            {
+                StopCoroutine(_stopAudio);
+            }
+
+            _audioSource.Play();
+            _playAudio = StartCoroutine(PlayAudio());
         }
         else
         {
-            StopAllCoroutines();
-            StartCoroutine(StopAudio());
+            if (_playAudio != null)
+            {
+                StopCoroutine(_playAudio);
+            }
+
+            _stopAudio = StartCoroutine(StopAudio());
         }
     }
 
     private IEnumerator PlayAudio()
     {
-        var _whiteSecond = new WaitForSeconds(1f);
 
-        _audioSource.Play();
-
-        while (_audioSource.volume < 1)
+        while (_audioSource.volume != _maxVolume)
         {
-            _audioSource.volume += _deltaVolume;
-            yield return _whiteSecond;
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume,_maxVolume, _deltaVolume * Time.deltaTime );
+            yield return _waitForSeconds;
         }
     }
 
     private IEnumerator StopAudio()
     {
-        var _whiteSecond = new WaitForSeconds(1f);
-
-        while (_audioSource.volume > 0)
+        while (_audioSource.volume != _minVolume)
         {
-            _audioSource.volume -= _deltaVolume;
-
-            if (_audioSource.volume <= 0)
-            {
-                _audioSource.Stop();
-            }
-            yield return _whiteSecond;
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _minVolume, _deltaVolume * Time.deltaTime);
+            yield return _waitForSeconds;
         }
+
+        _audioSource.Stop();
     }
 }
